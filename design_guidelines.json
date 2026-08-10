@@ -1,0 +1,162 @@
+{
+  "app_name": "FreightOS",
+  "personality": "5 Brutalist Mobile",
+  "personality_one_liner": "An industrial, function-first logistics command center prioritizing operational clarity, hard alignments, and uncompromised utilitarian aesthetics.",
+  "color": {
+    "surface": "#FFFFFF",
+    "onSurface": "#09090B",
+    "surfaceSecondary": "#F4F4F5",
+    "onSurfaceSecondary": "#18181B",
+    "surfaceTertiary": "#E4E4E7",
+    "onSurfaceTertiary": "#27272A",
+    "surfaceInverse": "#09090B",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#EA580C",
+    "brandPrimary": "#EA580C",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#C2410C",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#FFEDD5",
+    "onBrandTertiary": "#9A3412",
+    "success": "#16A34A",
+    "onSuccess": "#FFFFFF",
+    "warning": "#EAB308",
+    "onWarning": "#000000",
+    "error": "#DC2626",
+    "onError": "#FFFFFF",
+    "info": "#4B5563",
+    "onInfo": "#FFFFFF",
+    "border": "#D4D4D8",
+    "borderStrong": "#09090B",
+    "divider": "#E4E4E7"
+  },
+  "typography": {
+    "displayFontFamily": "Archivo",
+    "textFontFamily": "IBM Plex Mono",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Use rigid grids, edge-to-edge sections, and exposed structural dividers. Padding is generous but sharp. Avoid soft margins; align text flush to strict guides. No half-width orphans; modules fill the viewport width.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 0,
+    "md": 0,
+    "lg": 0,
+    "pill": 0
+  },
+  "shadow_tier": "0",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": "false",
+    "do's": [],
+    "dont's": [
+      "No blur or glass anywhere. Use solid colors and 1.5pt hard borders for structural separation and layering."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "none",
+      "android": "none",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "none",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Home (Customer)",
+      "purpose": "Command center for the shipper to view active loads and rapidly initiate new requests.",
+      "states": {
+        "loading": "Centered industrial loading text 'SYNCING_SYSTEM...' in IBM Plex Mono.",
+        "empty": "No active shipments. Illustration or empty warehouse image, with full-width primary CTA.",
+        "error": "Hard red error block with mono typography: 'CONNECTION REFUSED' and bold retry button."
+      },
+      "layout": "Fixed header with user context. The rest is a modular ListView. Large, edge-to-edge cards for active loads featuring oversized metric typography (weight, ETA) and thick bottom borders. Primary 'Post Shipment' CTA is sticky at the bottom, full width, zero radius, hard border."
+    },
+    {
+      "name": "Load Board (Truck Owner)",
+      "purpose": "Feed of available shipments emphasizing payout, distance, and quick quoting actions.",
+      "states": {
+        "loading": "Full-screen structural skeleton using high-contrast alternating grey bands.",
+        "empty": "Empty highway background with scrim. 'NO LOADS IN PERIMETER'.",
+        "error": "Error state block occupying the primary feed area."
+      },
+      "layout": "Sticky filter rails (segmented controls, squared off) under the header. Feed contains densely packed, highly structured cards. Each card uses internal horizontal dividers, left-aligned mono labels for dimensions/goods type, and a high-contrast 'SUBMIT QUOTE' action."
+    },
+    {
+      "name": "Post Shipment",
+      "purpose": "A mechanical, step-by-step or continuous long-scroll form to define shipment details.",
+      "states": {
+        "loading": "Blocking overlay with text.",
+        "empty": "N/A",
+        "error": "Inline validation in signal red, hard squared borders turning red."
+      },
+      "layout": "Single column. Edge-to-edge horizontal lines separating form groups. Labels sit starkly above inputs in mono font. Inputs have sharp borders. 'CONTINUE' CTA is sticky at the bottom."
+    },
+    {
+      "name": "Tracking & Timeline",
+      "purpose": "Live operational tracking surface for a shipment in transit.",
+      "states": {
+        "loading": "Map skeleton or grid pattern.",
+        "empty": "N/A",
+        "error": "Status bar reads 'TRACKING_OFFLINE'."
+      },
+      "layout": "Top half is the map (or abstracted location view). Bottom half is an edge-to-edge sheet featuring a vertical structural timeline. Bold, oversized status headers (e.g., 'IN TRANSIT'). Strict adherence to mono typography for timestamps and location coordinates."
+    }
+  ],
+  "images": {
+    "hero_scania_fleet": {
+      "url": "https://images.unsplash.com/photo-1755728531140-88e0b2a72d75",
+      "dark": "https://images.unsplash.com/photo-1755728531140-88e0b2a72d75",
+      "alt": "Two heavy scania transport trucks parked at a facility"
+    },
+    "warehouse_dock_aerial": {
+      "url": "https://images.unsplash.com/photo-1726776230751-183496c51f00",
+      "dark": "https://images.unsplash.com/photo-1726776230751-183496c51f00",
+      "alt": "Aerial view of a warehouse loading dock with parked trailers"
+    },
+    "empty_highway_sunset": {
+      "url": "https://images.pexels.com/photos/14166329/pexels-photo-14166329.jpeg",
+      "dark": "https://images.pexels.com/photos/14166329/pexels-photo-14166329.jpeg",
+      "alt": "A solitary truck traveling down a deserted highway at sunset"
+    },
+    "truck_fleet_topdown": {
+      "url": "https://images.pexels.com/photos/35501714/pexels-photo-35501714.jpeg",
+      "dark": "https://images.pexels.com/photos/35501714/pexels-photo-35501714.jpeg",
+      "alt": "Top-down aerial view of logistics truck trailers parked"
+    }
+  },
+  "haptics": {
+    "primary_button_press": "impactLight",
+    "tab_change": "selection",
+    "submit_quote": "impactMedium",
+    "form_error": "notificationError",
+    "role_switch": "impactHeavy"
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the 5 Brutalist Mobile rules: ZERO border radius across the app (buttons, cards, inputs are sharp squares).",
+    "Do NOT use glassmorphism, blur, or soft shadows. Depth is created using 1.5pt hard borders (borderStrong) and stark contrast.",
+    "Fonts: Use 'Archivo' for all display headings and 'IBM Plex Mono' for body text, metadata, form labels, and timestamps. This enforces the mechanical/industrial look.",
+    "Colors: Ensure #EA580C (Industrial Orange) is used as the sole accent for primary actions against the stark monochrome base. NEVER use blue, purple, or indigo.",
+    "Layout: Use edge-to-edge containers separated by thick dividers. Avoid 'floating' cards. Cards should span 100% width with flush borders.",
+    "CTAs: Primary buttons MUST be sticky at the bottom of forms/lists, completely full width, with no margins on the sides (edge-to-edge) if at the screen root, or respecting safe horizontal padding but filling it fully.",
+    "Images: Always apply a top-to-bottom gradient scrim (transparent to 70%+ surfaceInverse) when rendering text on images. Use the provided truck/warehouse images for headers, empty states, and profile backgrounds."
+  ]
+}

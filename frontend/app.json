@@ -1,0 +1,73 @@
+{
+  "expo": {
+    "name": "Truck Wala",
+    "slug": "truck-wala",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "frontend",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.emergent.freightmatch.fdoans",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Attach photos of goods to your shipments",
+        "NSCameraUsageDescription": "Take photos of goods for shipment listings",
+        "NSLocationWhenInUseUsageDescription": "Share your live location while on trip",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Share live truck location while trip is active",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.emergent.freightmatch.fdoans",
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-image.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000"
+        }
+      ],
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Share your live location while your trip is active so customers can track delivery.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "expo-audio"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
