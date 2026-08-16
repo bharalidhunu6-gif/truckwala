@@ -1,10 +1,12 @@
-import React, { useCallback, useMemo, useRef } from "react";
-import BottomSheet, {
-  BottomSheetView,
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-} from "@gorhom/bottom-sheet";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Modal,
+  FlatList,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, type, radius } from "./theme";
 
@@ -14,8 +16,13 @@ export type PickerItem = {
   icon?: any;
 };
 
+type PickerRef = {
+  expand: () => void;
+  close: () => void;
+};
+
 export function usePicker() {
-  const ref = useRef<BottomSheet>(null);
+  const ref = React.useRef<PickerRef | null>(null);
 
   const open = useCallback(() => {
     ref.current?.expand();
@@ -28,144 +35,173 @@ export function usePicker() {
   return { ref, open, close };
 }
 
-export function BottomPicker({
-  sheetRef,
-  title,
-  items,
-  value,
-  onChange,
-  testID,
-}: {
-  sheetRef: React.RefObject<BottomSheet | null>;
+export const BottomPicker = forwardRef<PickerRef, {
+  sheetRef: React.RefObject<PickerRef | null>;
   title: string;
   items: PickerItem[];
   value?: string | null;
   onChange: (v: string) => void;
   testID?: string;
-}) {
-  const snapPoints = useMemo(() => ["88%"], []);
+}>(
+  function BottomPicker(
+    {
+      sheetRef,
+      title,
+      items,
+      value,
+      onChange,
+      testID,
+    },
+    forwardedRef
+  ) {
+    const [visible, setVisible] = useState(false);
 
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    []
-  );
+    const close = useCallback(() => {
+      setVisible(false);
+    }, []);
 
-  return (
-    <BottomSheet
-      ref={sheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enableHandlePanningGesture={true}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
-      handleIndicatorStyle={{
-        backgroundColor: colors.borderStrong,
-        width: 44,
-      }}
-      backgroundStyle={{
-        backgroundColor: colors.surface,
-        borderTopLeftRadius: radius.xl,
-        borderTopRightRadius: radius.xl,
-      }}
-    >
-      <BottomSheetView
-        style={{
-          flex: 1,
-          paddingHorizontal: spacing.lg,
-        }}
-        testID={testID}
+    const expand = useCallback(() => {
+      setVisible(true);
+    }, []);
+
+    useImperativeHandle(
+      sheetRef,
+      () => ({
+        expand,
+        close,
+      }),
+      [expand, close]
+    );
+
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        expand,
+        close,
+      }),
+      [expand, close]
+    );
+
+    return (
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={close}
       >
-        <Text style={[type.h2, { marginBottom: spacing.md }]}>
-          {title}
-        </Text>
+        <View style={styles.overlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={close}
+          />
 
-        <BottomSheetScrollView
-          showsVerticalScrollIndicator={true}
-          contentContainerStyle={{
-            paddingBottom: spacing.xxl,
-          }}
-        
-        >
-          {items.map((it) => {
-            const active = it.value === value;
+          <View style={styles.sheet} testID={testID}>
+            <View style={styles.handle} />
 
-            return (
-              <Pressable
-                key={it.value}
-                testID={`picker-item-${it.value}`}
-                onPress={() => {
-                  onChange(it.value);
-                  sheetRef.current?.close();
-                }}
-                style={({ pressed }) => [
-                  s.row,
-                  active && {
-                    backgroundColor: colors.brandLight,
-                    borderColor: colors.brand,
-                  },
-                  pressed && {
-                    opacity: 0.75,
-                  },
-                ]}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 12,
-                    flex: 1,
-                  }}
-                >
-                  {it.icon ? (
-                    <Ionicons
-                      name={it.icon}
-                      size={20}
-                      color={
-                        active
-                          ? colors.brand
-                          : colors.onSurfaceMuted
-                      }
-                    />
-                  ) : null}
+            <Text style={styles.title}>{title}</Text>
 
-                  <Text
-                    style={{
-                      ...type.body,
-                      color: active
-                        ? colors.brand
-                        : colors.onSurface,
-                      fontWeight: active ? "700" : "500",
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.value}
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={styles.list}
+              renderItem={({ item }) => {
+                const active = item.value === value;
+
+                return (
+                  <Pressable
+                    testID={`picker-item-${item.value}`}
+                    onPress={() => {
+                      onChange(item.value);
+                      close();
                     }}
+                    style={({ pressed }) => [
+                      styles.row,
+                      active && styles.activeRow,
+                      pressed && { opacity: 0.7 },
+                    ]}
                   >
-                    {it.label}
-                  </Text>
-                </View>
+                    <View style={styles.left}>
+                      {item.icon ? (
+                        <Ionicons
+                          name={item.icon}
+                          size={20}
+                          color={
+                            active
+                              ? colors.brand
+                              : colors.onSurfaceMuted
+                          }
+                        />
+                      ) : null}
 
-                {active ? (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={22}
-                    color={colors.brand}
-                  />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </BottomSheetScrollView>
-      </BottomSheetView>
-    </BottomSheet>
-  );
-}
+                      <Text
+                        style={[
+                          type.body,
+                          {
+                            color: active
+                              ? colors.brand
+                              : colors.onSurface,
+                            fontWeight: active ? "700" : "500",
+                          },
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                    </View>
 
-const s = StyleSheet.create({
+                    {active ? (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={22}
+                        color={colors.brand}
+                      />
+                    ) : null}
+                  </Pressable>
+                );
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+);
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+
+  sheet: {
+    maxHeight: "88%",
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+
+  handle: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.borderStrong,
+    alignSelf: "center",
+    marginBottom: spacing.lg,
+  },
+
+  title: {
+    ...type.h2,
+    marginBottom: spacing.md,
+  },
+
+  list: {
+    paddingBottom: spacing.xxl,
+  },
+
   row: {
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
@@ -177,5 +213,17 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.divider,
     backgroundColor: colors.surface,
+  },
+
+  activeRow: {
+    backgroundColor: colors.brandLight,
+    borderColor: colors.brand,
+  },
+
+  left: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
   },
 });

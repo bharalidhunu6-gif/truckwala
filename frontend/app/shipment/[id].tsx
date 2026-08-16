@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Alert } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -146,18 +146,8 @@ export default function ShipmentDetail() {
         </View>
       </SafeAreaView>
 
-      <View style={{ flex: 1 }}>
-  <ScrollView
-    style={{ flex: 1 }}
-    contentContainerStyle={{
-      paddingBottom: insets.bottom + 150,
-    }}
-    keyboardShouldPersistTaps="handled"
-    keyboardDismissMode="on-drag"
-    showsVerticalScrollIndicator={true}
-    nestedScrollEnabled={true}
-    scrollEnabled={true}
-  >
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {/* Route card */}
           <Animated.View entering={FadeInDown.duration(400)}>
             <Card style={styles.routeCard}>
@@ -232,7 +222,7 @@ export default function ShipmentDetail() {
                     <Ionicons name="chevron-down" size={18} color={colors.onSurfaceDim} />
                   </Pressable>
                 </Field>
-                <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
+                <View style={{ flexDirection: "row", gap: spacing.md }}>
                   <View style={{ flex: 1 }}>
                     <Field label="Price (INR)">
                       <TextInput testID="quote-price" value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="12000" placeholderTextColor={colors.onSurfaceDim} style={inputStyle} />
@@ -309,7 +299,7 @@ export default function ShipmentDetail() {
             })
           )}
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
 
       <BottomPicker
         sheetRef={truckPicker.ref}
