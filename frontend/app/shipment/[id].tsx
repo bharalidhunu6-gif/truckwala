@@ -83,7 +83,10 @@ export default function ShipmentDetail() {
         note,
       });
       setPrice(""); setEta(""); setNote("");
-      load();
+
+      const qs = await api.shipmentQuotes(id!);
+      setQuotes(qs);
+      Alert.alert("Quote submitted", "Your quote has been submitted successfully.");
     } catch (e: any) {
       if (e?.code === "subscription_required") {
         Alert.alert("Subscription required", e.message, [
@@ -143,8 +146,21 @@ export default function ShipmentDetail() {
         </View>
       </SafeAreaView>
 
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  style={{ flex: 1 }}
+>
+  <ScrollView
+    style={{ flex: 1 }}
+    contentContainerStyle={{
+      flexGrow: 1,
+      paddingBottom: insets.bottom + 120,
+    }}
+    keyboardShouldPersistTaps="handled"
+    keyboardDismissMode="on-drag"
+    showsVerticalScrollIndicator={false}
+    nestedScrollEnabled={true}
+  >
           {/* Route card */}
           <Animated.View entering={FadeInDown.duration(400)}>
             <Card style={styles.routeCard}>
@@ -219,7 +235,7 @@ export default function ShipmentDetail() {
                     <Ionicons name="chevron-down" size={18} color={colors.onSurfaceDim} />
                   </Pressable>
                 </Field>
-                <View style={{ flexDirection: "row", gap: spacing.md }}>
+                <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
                   <View style={{ flex: 1 }}>
                     <Field label="Price (INR)">
                       <TextInput testID="quote-price" value={price} onChangeText={setPrice} keyboardType="numeric" placeholder="12000" placeholderTextColor={colors.onSurfaceDim} style={inputStyle} />
