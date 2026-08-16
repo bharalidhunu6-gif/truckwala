@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, ActivityIndicator, Image, Alert } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -146,20 +146,17 @@ export default function ShipmentDetail() {
         </View>
       </SafeAreaView>
 
-      <KeyboardAvoidingView
-  behavior={Platform.OS === "ios" ? "padding" : "height"}
-  style={{ flex: 1 }}
->
+      <View style={{ flex: 1 }}>
   <ScrollView
     style={{ flex: 1 }}
     contentContainerStyle={{
-      flexGrow: 1,
-      paddingBottom: insets.bottom + 120,
+      paddingBottom: insets.bottom + 150,
     }}
     keyboardShouldPersistTaps="handled"
     keyboardDismissMode="on-drag"
-    showsVerticalScrollIndicator={false}
+    showsVerticalScrollIndicator={true}
     nestedScrollEnabled={true}
+    scrollEnabled={true}
   >
           {/* Route card */}
           <Animated.View entering={FadeInDown.duration(400)}>
@@ -312,7 +309,7 @@ export default function ShipmentDetail() {
             })
           )}
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
 
       <BottomPicker
         sheetRef={truckPicker.ref}
