@@ -14,12 +14,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://truckwala.onrender.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://api.truckwala.tech"
       }
     },
     "production": {
-      "autoIncrement": true
-    }
+  "autoIncrement": true,
+  "env": {
+    "EXPO_PUBLIC_BACKEND_URL": "https://api.truckwala.tech"
+  }
+}
   },
   "submit": {
     "production": {}
