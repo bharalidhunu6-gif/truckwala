@@ -202,8 +202,10 @@ export default function BookingDetail() {
                   ? (b.payment_status === "paid_cod" ? "COD PAID" : "COD")
                   : (b.payment_status === "paid" ? "PAID" : "UNPAID")
               }
-              tone={(b.payment_status === "paid" || b.payment_status === "paid_cod") ? "success" : b.payment_method === "cod" ? "warning" : "warning"}
-              icon={(b.payment_status === "paid" || b.payment_status === "paid_cod") ? "checkmark-circle" : b.payment_method === "cod" ? "cash-outline" : "time-outline"}
+              tone={(b.payment_status === "paid" || b.payment_status === "paid_cod") ? 
+                "success" : b.payment_method === "cod" ? "warning" : "warning"}
+              icon={(b.payment_status === "paid" || b.payment_status === "paid_cod") ?
+                 "checkmark-circle" : b.payment_method === "cod" ? "cash-outline" : "time-outline"}
             />
           </Card>
         </Animated.View>

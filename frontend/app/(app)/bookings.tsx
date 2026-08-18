@@ -99,9 +99,21 @@ export default function Bookings() {
                 </View>
                 <View style={styles.cardFoot}>
                   <Tag
-                    label={b.payment_status === "paid" ? "PAID" : "UNPAID"}
-                    tone={b.payment_status === "paid" ? "success" : "warning"}
-                    icon={b.payment_status === "paid" ? "checkmark-circle" : "time-outline"}
+                   label={
+  b.payment_status === "paid" || b.payment_status === "paid_cod"
+    ? "PAID"
+    : "UNPAID"
+}
+tone={
+  b.payment_status === "paid" || b.payment_status === "paid_cod"
+    ? "success"
+    : "warning"
+}
+icon={
+  b.payment_status === "paid" || b.payment_status === "paid_cod"
+    ? "checkmark-circle"
+    : "time-outline"
+}
                   />
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                     <Text style={type.small}>View details</Text>
