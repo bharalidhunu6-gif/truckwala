@@ -111,7 +111,7 @@ export default function Home() {
         const currentIds = new Set<string>(open.map((s: any) => s.id));
         const newOnes = [...currentIds].filter((id) => !lastIdsRef.current.has(id));
         if (lastIdsRef.current.size > 0 && newOnes.length > 0) {
-          playSound("new");
+          playSound();
         }
         lastIdsRef.current = currentIds;
         setItems(open);
@@ -123,7 +123,7 @@ export default function Home() {
         if (lastIdsRef.current.size > 0) {
           for (const s of mine) {
             const prevStatus = (lastIdsRef.current as any)._statuses?.get?.(s.id);
-            if (prevStatus && prevStatus !== s.status) { playSound("new"); break; }
+            if (prevStatus && prevStatus !== s.status) { playSound(); break; }
           }
         }
         (lastIdsRef.current as any)._statuses = nowMap;
