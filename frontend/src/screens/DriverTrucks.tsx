@@ -249,15 +249,7 @@ export default function DriverTrucks() {
                         </Text>
                       )}
                     </View>
-                    <Pressable onPress={async () => {
-                      Alert.alert("Delete truck?", `${t.reg_number} will be removed from your fleet.`, [
-                        { text: "Cancel", style: "cancel" },
-                        { text: "Delete", style: "destructive", onPress: async () => { try { await api.deleteTruck(t.id); load(); } catch (e: any) { Alert.alert("Error", e.message); } } },
-                      ]);
-                    }} testID={`truck-delete-${t.id}`} style={styles.deleteBtn}>
-                      <Ionicons name="trash-outline" size={18} color={colors.error} />
-                    </Pressable>
-                  </View>
+                    </View>
 
                   {/* Status tags */}
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
