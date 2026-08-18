@@ -301,17 +301,24 @@ export default function ShipmentDetail() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <BottomPicker
-        sheetRef={truckPicker.ref}
-        title="Choose your truck"
-        value={selTruck}
-        onChange={setSelTruck}
-        items={trucks.map((t: any) => ({
-          value: t.id,
-          label: `${t.reg_number} · ${t.truck_type} (${t.verification_status || "pending"})`,
-          icon: t.verification_status === "approved" ? "checkmark-circle-outline" : t.verification_status === "rejected" ? "close-circle-outline" : "time-outline",
-        }))}
-      />
+      {isDriver && (
+  <BottomPicker
+    sheetRef={truckPicker.ref}
+    title="Choose your truck"
+    value={selTruck}
+    onChange={setSelTruck}
+    items={trucks.map((t: any) => ({
+      value: t.id,
+      label: `${t.reg_number} · ${t.truck_type} (${t.verification_status || "pending"})`,
+      icon:
+        t.verification_status === "approved"
+          ? "checkmark-circle-outline"
+          : t.verification_status === "rejected"
+          ? "close-circle-outline"
+          : "time-outline",
+    }))}
+  />
+)}
     </View>
   );
 }
