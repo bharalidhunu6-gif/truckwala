@@ -389,10 +389,11 @@ async def phone_send_otp(body: PhoneOTPRequestIn):
 
     try:
         # Send OTP through Renflair SMS
+        cfg= twilio_load_config()
         twilio_send_sms(
             phone,
             f"Your Truck Wala OTP is {code}. Valid for 10 minutes.",
-            None,
+            cfg,
         )
 
     except TwilioSendError as e:

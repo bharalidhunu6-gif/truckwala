@@ -1,11 +1,3 @@
-"""SMS OTP wrapper.
-
-OTP is now sent through Renflair SMS API.
-
-The existing function names are kept compatible with auth.py,
-so auth.py does not need to be changed immediately.
-"""
-
 from __future__ import annotations
 
 import logging
@@ -58,7 +50,6 @@ def normalize_phone(raw: str, default_cc: Optional[str] = None) -> str:
 
 @dataclass
 class TwilioConfig:
-    # Kept with old names so auth.py remains compatible.
     account_sid: str
     auth_token: str
     verify_service_sid: str
@@ -73,12 +64,10 @@ class TwilioConfig:
 
     @property
     def use_verify(self) -> bool:
-        # Twilio Verify is completely disabled.
         return False
 
     @property
     def use_messages(self) -> bool:
-        # Renflair SMS is used as the SMS provider.
         return bool(
             os.getenv("RENFLAIR_API_KEY", "").strip()
         )
@@ -102,10 +91,7 @@ def load_config() -> TwilioConfig:
 # ============================================================
 
 def gen_code(length: int = 6) -> str:
-    """Generate a numeric OTP."""
-
     n = randint(0, 10**length - 1)
-
     return str(n).zfill(length)
 
 
@@ -114,7 +100,7 @@ def gen_code(length: int = 6) -> str:
 # ============================================================
 
 class TwilioSendError(Exception):
-    """Kept for compatibility with existing auth.py."""
+    """SMS sending error."""
 
 
 # ============================================================
@@ -125,7 +111,6 @@ def twilio_send_verify(
     phone: str,
     cfg: Optional[TwilioConfig] = None,
 ) -> str:
-
     raise TwilioSendError(
         "Twilio Verify is disabled. Renflair SMS is being used."
     )
@@ -136,7 +121,6 @@ def twilio_check_verify(
     code: str,
     cfg: Optional[TwilioConfig] = None,
 ) -> bool:
-
     raise TwilioSendError(
         "Twilio Verify is disabled. OTP is verified from MongoDB."
     )
@@ -151,12 +135,7 @@ def twilio_send_sms(
     body: str,
     cfg: Optional[TwilioConfig] = None,
 ) -> str:
-    """
-    Send SMS through Renflair.
-
-    auth.py already calls this function, therefore the old
-    function name is intentionally preserved.
-    """
+    """Send OTP through Renflair SMS API."""
 
     api_key = os.getenv(
         "RENFLAIR_API_KEY",
@@ -175,27 +154,14 @@ def twilio_send_sms(
 
     clean_phone = normalize_phone(phone)
 
-    # Convert +91XXXXXXXXXX -> XXXXXXXXXX
+    # +91XXXXXXXXXX -> XXXXXXXXXX
     if clean_phone.startswith("+91"):
         clean_phone = clean_phone[3:]
 
-    if (
-        clean_phone.startswith("91")
-        and len(clean_phone) == 12
-    ):
-        clean_phone = clean_phone[2:]
-
-    if (
-        len(clean_phone) != 10
-        or not clean_phone.isdigit()
-    ):
+    if len(clean_phone) != 10 or not clean_phone.isdigit():
         raise TwilioSendError(
             "Invalid Indian mobile number"
         )
-
-    # --------------------------------------------------------
-    # Extract OTP from message.
-    # --------------------------------------------------------
 
     match = re.search(
         r"\b(\d{4,6})\b",
@@ -209,10 +175,6 @@ def twilio_send_sms(
 
     otp = match.group(1)
 
-    # --------------------------------------------------------
-    # Renflair API parameters
-    # --------------------------------------------------------
-
     params = {
         "API": api_key,
         "PHONE": clean_phone,
@@ -220,14 +182,12 @@ def twilio_send_sms(
     }
 
     log.info(
-        "Sending OTP through Renflair to ******%s",
+        "Sending Renflair OTP to ******%s",
         clean_phone[-4:],
     )
 
     try:
-
         with httpx.Client(timeout=20.0) as client:
-
             response = client.get(
                 api_url,
                 params=params,
@@ -236,7 +196,6 @@ def twilio_send_sms(
         response.raise_for_status()
 
     except Exception as e:
-
         log.exception(
             "Renflair SMS request failed"
         )
@@ -245,18 +204,9 @@ def twilio_send_sms(
             f"Renflair SMS failed: {e}"
         ) from e
 
-    # --------------------------------------------------------
-    # Read provider response
-    # --------------------------------------------------------
-
-    try:
-        data = response.json()
-    except Exception:
-        data = response.text
-
     log.info(
-        "Renflair SMS response: %s",
-        data,
+        "Renflair response: %s",
+        response.text,
     )
 
-    return str(data)
+    return response.text
