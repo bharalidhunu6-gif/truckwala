@@ -145,15 +145,14 @@ class OrderIn(BaseModel):
 
 
 class AcceptQuoteIn(BaseModel):
-    # 'razorpay' -> online prepay; 'cod' -> pay driver on delivery in cash.
-    payment_method: Literal["razorpay", "cod"] = "razorpay"
+    # 'cashfree' -> online prepay; 'cod' -> pay driver on delivery in cash.
+    payment_method: Literal["cashfree", "cod"] = "cashfree"
 
 
 class PaymentVerifyIn(BaseModel):
     booking_id: str
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+    order_id: str
+   
 
 
 class LocationIn(BaseModel):
@@ -182,9 +181,7 @@ class SubscriptionOrderIn(BaseModel):
 class SubscriptionVerifyIn(BaseModel):
     truck_id: str
     subscription_id: str
-    razorpay_order_id: str
-    razorpay_payment_id: str
-    razorpay_signature: str
+    order_id: str
 
 
 class ComplaintIn(BaseModel):

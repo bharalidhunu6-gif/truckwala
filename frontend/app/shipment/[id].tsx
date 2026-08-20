@@ -42,7 +42,8 @@ export default function ShipmentDetail() {
       setShipment(s);
       const qs = await api.shipmentQuotes(id!);
       if (!isDriver && qs.length > prevQuoteCount.current && prevQuoteCount.current > 0) {
-        playSound("new");
+        // New quote received — play notification sound
+        playSound();
       }
       prevQuoteCount.current = qs.length;
       setQuotes(qs);
