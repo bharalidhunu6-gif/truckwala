@@ -118,81 +118,94 @@ export default function SubscribeScreen() {
   // =========================
   // CASHFREE WEBVIEW MESSAGE
   // =========================
+const verifySubscription = async () => {
+  if (!truck_id || !subId || !orderId) {
+    Alert.alert(
+      "Error",
+      "Subscription order information missing."
+    );
+    return;
+  }
 
-  const onWebMessage = async (e: any) => {
-    try {
-      const data = JSON.parse(e.nativeEvent.data);
+  try {
+    // Cashfree may take a few seconds to update
+    // the payment status. Retry verification.
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const result = await api.subVerify({
+        truck_id,
+        subscription_id: subId,
+        order_id: orderId,
+      });
 
-      // Payment checkout returned an error
-      if (data.type === "error") {
+      if (result?.ok) {
         setPayHtml(null);
 
         Alert.alert(
-          "Payment failed",
-          data.error || "Cashfree payment could not be completed."
+          "🎉 Subscription Active",
+          "Your subscription is active for 30 days. You can now submit quotes."
         );
 
+        await load();
         return;
       }
 
-      // User cancelled / closed checkout
-      if (data.type === "cancelled") {
-        setPayHtml(null);
-        return;
-      }
+      // Wait 2 seconds before checking again
+      await new Promise((resolve) =>
+        setTimeout(resolve, 2000)
+      );
+    }
 
-      // Payment attempt finished.
-      // We do NOT trust the frontend result.
-      // Backend verifies the Cashfree order status.
-      if (data.type === "payment_finished") {
-        if (!subId || !orderId) {
-          setPayHtml(null);
-          Alert.alert("Error", "Subscription order information missing.");
-          return;
-        }
+    setPayHtml(null);
 
-        try {
-          const result = await api.subVerify({
-            truck_id,
-            subscription_id: subId,
-            order_id: orderId,
-          });
+    Alert.alert(
+      "Payment Pending",
+      "Payment was received, but Cashfree is still confirming it. Please check again shortly."
+    );
+  } catch (err: any) {
+    setPayHtml(null);
 
-          setPayHtml(null);
+    Alert.alert(
+      "Payment Verification Failed",
+      err?.message ||
+        "Could not verify the Cashfree payment."
+    );
+  }
+};
+  const onWebMessage = async (e: any) => {
+  try {
+    const data = JSON.parse(e.nativeEvent.data);
 
-          if (result?.ok) {
-            Alert.alert(
-              "🎉 Subscription active",
-              "Your subscription is active for 30 days. You can now submit quotes."
-            );
-
-            await load();
-          } else {
-            Alert.alert(
-              "Payment pending",
-              "Payment has not been confirmed yet. Please check again shortly."
-            );
-          }
-        } catch (err: any) {
-          setPayHtml(null);
-
-          Alert.alert(
-            "Payment verification failed",
-            err?.message || "Could not verify the Cashfree payment."
-          );
-        }
-
-        return;
-      }
-    } catch (err: any) {
+    if (data.type === "error") {
       setPayHtml(null);
 
       Alert.alert(
-        "Error",
-        err?.message || "Unable to process payment response."
+        "Payment failed",
+        data.error ||
+          "Cashfree payment could not be completed."
       );
+
+      return;
     }
-  };
+
+    if (data.type === "cancelled") {
+      setPayHtml(null);
+      return;
+    }
+
+    if (data.type === "payment_finished") {
+      await verifySubscription();
+      return;
+    }
+  } catch (err: any) {
+    setPayHtml(null);
+
+    Alert.alert(
+      "Error",
+      err?.message ||
+        "Unable to process payment response."
+    );
+  }
+};
 
   if (loading) {
     return (
