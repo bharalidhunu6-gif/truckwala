@@ -7,12 +7,15 @@
 - POST /subscriptions/verify      -> Cashfree payment verification
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime, timezone, timedelta
 import logging
 import uuid
 import os
 import httpx
+import hmac
+import hashlib
+import base64
 
 from deps import (
     db,

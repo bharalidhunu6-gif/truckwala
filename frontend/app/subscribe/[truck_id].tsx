@@ -624,7 +624,7 @@ function buildCashfreeHtml({
 
         const result = await cashfree.checkout({
           paymentSessionId: paymentSessionId,
-          redirectTarget: "_modal"
+          redirectTarget: "_self"
         });
 
         // Cashfree popup/inline checkout returns
