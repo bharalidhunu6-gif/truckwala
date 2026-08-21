@@ -128,16 +128,26 @@ const verifySubscription = async () => {
   }
 
   try {
-    // Cashfree may take a few seconds to update
-    // the payment status. Retry verification.
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 10; attempt++) {
+      console.log(
+        "Cashfree verification:",
+        attempt,
+        "/10",
+        orderId
+      );
+
       const result = await api.subVerify({
         truck_id,
         subscription_id: subId,
         order_id: orderId,
       });
 
-      if (result?.ok) {
+      console.log(
+        "Cashfree verification result:",
+        JSON.stringify(result)
+      );
+
+      if (result?.ok === true) {
         setPayHtml(null);
 
         Alert.alert(
@@ -149,19 +159,25 @@ const verifySubscription = async () => {
         return;
       }
 
-      // Wait 2 seconds before checking again
-      await new Promise((resolve) =>
-        setTimeout(resolve, 2000)
-      );
+      if (attempt < 10) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 3000)
+        );
+      }
     }
 
     setPayHtml(null);
 
     Alert.alert(
       "Payment Pending",
-      "Payment was received, but Cashfree is still confirming it. Please check again shortly."
+      "Cashfree has not confirmed this payment yet. Please check again shortly."
     );
   } catch (err: any) {
+    console.log(
+      "Cashfree verification error:",
+      err
+    );
+
     setPayHtml(null);
 
     Alert.alert(
@@ -571,110 +587,219 @@ function buildCashfreeHtml({
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="utf-8" />
+
   <meta
     name="viewport"
-    content="width=device-width,initial-scale=1"
+    content="width=device-width, initial-scale=1"
   />
+
+  <title>Cashfree Payment</title>
 
   <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
 
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
-      background: #f7f8fa;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #ffffff;
+      font-family: Arial, sans-serif;
     }
 
-    .loading {
+    #loading {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100%;
       font-size: 16px;
-      color: #555;
+      color: #444;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
     }
   </style>
 </head>
 
 <body>
-  <div class="loading">
-    Opening Cashfree secure checkout...
-  </div>
 
-  <script>
-    const paymentSessionId =
-      ${JSON.stringify(paymentSessionId)};
+<div id="loading">
+  Opening Cashfree secure payment...
+</div>
 
-    const mode =
-      ${JSON.stringify(mode)};
+<script>
 
-    function sendMessage(payload) {
-      if (
-        window.ReactNativeWebView &&
-        window.ReactNativeWebView.postMessage
-      ) {
-        window.ReactNativeWebView.postMessage(
-          JSON.stringify(payload)
-        );
-      }
+const paymentSessionId =
+  ${JSON.stringify(paymentSessionId)};
+
+const mode =
+  ${JSON.stringify(mode)};
+
+
+function sendMessage(data) {
+  try {
+    if (
+      window.ReactNativeWebView &&
+      window.ReactNativeWebView.postMessage
+    ) {
+      window.ReactNativeWebView.postMessage(
+        JSON.stringify(data)
+      );
     }
-
-    async function startCashfree() {
-      try {
-        if (!paymentSessionId) {
-          throw new Error(
-            "Cashfree payment session is missing"
-          );
-        }
-
-        const cashfree = Cashfree({
-          mode: mode
-        });
-
-        const result = await cashfree.checkout({
-          paymentSessionId: paymentSessionId,
-          redirectTarget: "_self"
-        });
-
-        // Cashfree popup/inline checkout returns
-        // a promise after the payment attempt.
-        if (result && result.error) {
-          sendMessage({
-            type: "error",
-            error:
-              result.error.message ||
-              "Cashfree checkout failed"
-          });
-          return;
-        }
-
-        // IMPORTANT:
-        // Do not trust client-side payment success.
-        // React Native will call the backend and the backend
-        // will verify the Cashfree order status.
-        sendMessage({
-          type: "payment_finished"
-        });
-
-      } catch (error) {
-        sendMessage({
-          type: "error",
-          error:
-            error?.message ||
-            "Unable to open Cashfree checkout"
-        });
-      }
-    }
-
-    window.addEventListener(
-      "load",
-      startCashfree
+  } catch (e) {
+    console.log(
+      "React Native message error:",
+      e
     );
-  </script>
+  }
+}
+
+
+async function startCashfree() {
+
+  try {
+
+    if (!paymentSessionId) {
+      throw new Error(
+        "Cashfree payment session is missing."
+      );
+    }
+
+    document.getElementById(
+      "loading"
+    ).innerText =
+      "Opening Cashfree secure payment...";
+
+
+    if (
+      typeof Cashfree !== "function"
+    ) {
+      throw new Error(
+        "Cashfree SDK could not be loaded."
+      );
+    }
+
+
+    const cashfree = Cashfree({
+      mode: mode
+    });
+
+
+    const checkoutOptions = {
+      paymentSessionId:
+        paymentSessionId,
+
+      redirectTarget: "_self"
+    };
+
+
+    console.log(
+      "Starting Cashfree checkout..."
+    );
+
+
+    /*
+     * IMPORTANT:
+     *
+     * Do NOT call payment_finished
+     * before checkout() completes.
+     *
+     * Cashfree checkout handles the
+     * payment screen first.
+     */
+
+    const result =
+      await cashfree.checkout(
+        checkoutOptions
+      );
+
+
+    console.log(
+      "Cashfree checkout returned:",
+      result
+    );
+
+
+    if (
+      result &&
+      result.error
+    ) {
+
+      sendMessage({
+        type: "error",
+
+        error:
+          result.error.message ||
+          "Cashfree payment failed."
+      });
+
+      return;
+    }
+
+
+    /*
+     * Checkout finished/returned.
+     *
+     * React Native will now ask the
+     * backend to verify the payment.
+     */
+
+    sendMessage({
+      type: "payment_finished"
+    });
+
+  } catch (error) {
+
+    console.log(
+      "Cashfree checkout error:",
+      error
+    );
+
+
+    sendMessage({
+      type: "error",
+
+      error:
+        error?.message ||
+        "Unable to open Cashfree payment."
+    });
+  }
+}
+
+
+/*
+ * Wait until Cashfree JS SDK
+ * is actually loaded.
+ */
+
+function waitForCashfree() {
+
+  if (
+    typeof Cashfree === "function"
+  ) {
+
+    startCashfree();
+
+    return;
+  }
+
+
+  setTimeout(
+    waitForCashfree,
+    300
+  );
+}
+
+
+window.addEventListener(
+  "load",
+  waitForCashfree
+);
+
+</script>
+
 </body>
 </html>
 `;
