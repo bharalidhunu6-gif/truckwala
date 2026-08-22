@@ -205,8 +205,9 @@ async def create_order(
                 "customer_phone": user.get("phone", ""),
             },
             "order_meta": {
-                "return_url": return_url,
-            },
+    "return_url": return_url,
+    "notify_url": "https://api.truckwala.tech/api/subscriptions/webhook",
+},
             "order_note": (
                 f"Truck subscription - "
                 f"{tier['title']}"
@@ -512,3 +513,165 @@ async def verify_order(
         "payment_status": "paid",
         "subscription": updated,
     }
+# ============================================================
+# CASHFREE SUBSCRIPTION WEBHOOK
+# ============================================================
+
+@router.post("/subscriptions/webhook")
+async def cashfree_subscription_webhook(
+    request: Request,
+):
+    raw_body = await request.body()
+
+    signature = request.headers.get(
+        "x-webhook-signature"
+    )
+
+    timestamp = request.headers.get(
+        "x-webhook-timestamp"
+    )
+
+    if not signature or not timestamp:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing Cashfree webhook signature",
+        )
+
+    # Cashfree signature:
+    # base64(HMAC-SHA256(timestamp + raw_body, secret_key))
+    message = timestamp.encode() + raw_body
+
+    expected_signature = base64.b64encode(
+        hmac.new(
+            CASHFREE_CLIENT_SECRET.encode(),
+            message,
+            hashlib.sha256,
+        ).digest()
+    ).decode()
+
+    if not hmac.compare_digest(
+        signature,
+        expected_signature,
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid Cashfree webhook signature",
+        )
+
+    try:
+        payload = await request.json()
+
+        log.info(
+            "Cashfree subscription webhook received: %s",
+            payload,
+        )
+
+        data = payload.get("data") or {}
+        order = data.get("order") or {}
+        payment = data.get("payment") or {}
+
+        order_id = order.get("order_id")
+        payment_status = payment.get(
+            "payment_status"
+        )
+
+        if not order_id:
+            return {"ok": True}
+
+        # Find our subscription using Cashfree order ID
+        sub = await db.subscriptions.find_one({
+            "cashfree_order_id": order_id
+        })
+
+        if not sub:
+            log.warning(
+                "Cashfree webhook: subscription not found for order %s",
+                order_id,
+            )
+            return {"ok": True}
+
+        # Only activate SUCCESS payments
+        if payment_status != "SUCCESS":
+            return {
+                "ok": True,
+                "payment_status": payment_status,
+            }
+
+        # Idempotency:
+        # Do not activate the same payment twice.
+        if sub.get("status") == "active":
+            return {
+                "ok": True,
+                "already_active": True,
+            }
+
+        now = datetime.now(timezone.utc)
+
+        base = now
+
+        existing = await db.subscriptions.find_one(
+            {
+                "truck_id": sub["truck_id"],
+                "status": "active",
+            },
+            sort=[
+                ("expires_at", -1)
+            ],
+        )
+
+        if existing and existing.get(
+            "expires_at"
+        ):
+            exp = existing["expires_at"]
+
+            if exp.tzinfo is None:
+                exp = exp.replace(
+                    tzinfo=timezone.utc
+                )
+
+            if exp > now:
+                base = exp
+
+        expires_at = (
+            base + timedelta(days=30)
+        )
+
+        payment_id = (
+            payment.get("cf_payment_id")
+            or payment.get("payment_id")
+        )
+
+        await db.subscriptions.update_one(
+            {"id": sub["id"]},
+            {
+                "$set": {
+                    "cashfree_payment_id": payment_id,
+                    "status": "active",
+                    "activated_at": now.isoformat(),
+                    "expires_at": expires_at,
+                }
+            },
+        )
+
+        log.info(
+            "Subscription activated by Cashfree webhook: %s",
+            sub["id"],
+        )
+
+        return {
+            "ok": True,
+            "payment_status": "paid",
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        log.exception(
+            "Cashfree subscription webhook processing failed"
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail="Webhook processing failed",
+        )
