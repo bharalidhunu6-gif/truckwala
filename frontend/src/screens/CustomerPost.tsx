@@ -98,7 +98,7 @@ export default function CustomerPost() {
         instructions,
         photos,
       });
-      playSound("ok");
+      playSound();
       router.replace(`/shipment/${created.id}`);
     } catch (e: any) { setErr(e.message); }
     finally { setLoading(false); }

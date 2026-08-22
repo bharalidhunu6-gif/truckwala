@@ -17,11 +17,11 @@ export default function Index() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceInverse, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ ...type.metricXL, color: colors.brandPrimary, letterSpacing: 2 }}>TRUCK WALA</Text>
+      <Text style={{ ...type.metric, color: colors.brand, letterSpacing: 2 }}>TRUCK WALA</Text>
       <Text style={{ ...type.label, color: colors.onSurfaceInverse, marginTop: 12, letterSpacing: 3 }}>
         LOGISTICS.NETWORK
       </Text>
-      <ActivityIndicator color={colors.brandPrimary} style={{ marginTop: 24 }} />
+      <ActivityIndicator color={colors.brand} style={{ marginTop: 24 }} />
     </View>
   );
 }

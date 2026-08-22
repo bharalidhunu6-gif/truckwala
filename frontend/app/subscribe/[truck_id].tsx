@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect,useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,17 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { WebView } from "react-native-webview";
+import {
+  CFErrorResponse,
+  CFPaymentGatewayService,
+} from "react-native-cashfree-pg-sdk";
+
+import {
+  CFEnvironment,
+  CFSession,
+  CFThemeBuilder,
+  CFUPIIntentCheckoutPayment,
+} from "cashfree-pg-api-contract";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 import { Button, Card, Tag } from "@/src/ui";
@@ -31,7 +42,8 @@ export default function SubscribeScreen() {
   const [payHtml, setPayHtml] = useState<string | null>(null);
   const [subId, setSubId] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
-
+const orderIdRef = useRef<string | null>(null);
+const subIdRef = useRef<string | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
 
@@ -52,6 +64,79 @@ export default function SubscribeScreen() {
   useEffect(() => {
     load();
   }, [load]);
+  useEffect(() => {
+  CFPaymentGatewayService.setCallback({
+    onVerify: async (verifiedOrderId: string) => {
+      console.log("Cashfree UPI verified:", verifiedOrderId);
+
+      const currentSubId = subIdRef.current;
+      const currentOrderId =
+        orderIdRef.current || verifiedOrderId;
+
+      if (!truck_id || !currentSubId || !currentOrderId) {
+        Alert.alert(
+          "Payment Error",
+          "Payment information missing."
+        );
+        return;
+      }
+
+      try {
+        const result = await api.subVerify({
+          truck_id,
+          subscription_id: currentSubId,
+          order_id: currentOrderId,
+        });
+
+        console.log(
+          "UPI verification:",
+          JSON.stringify(result)
+        );
+
+        if (result?.ok === true) {
+          Alert.alert(
+            "🎉 Subscription Active",
+            "Your subscription is active for 30 days. You can now submit quotes."
+          );
+
+          await load();
+        } else {
+          Alert.alert(
+            "Payment Pending",
+            "Payment received but Cashfree has not confirmed it yet."
+          );
+        }
+      } catch (e: any) {
+        Alert.alert(
+          "Verification Failed",
+          e?.message ||
+            "Could not verify payment."
+        );
+      }
+    },
+
+    onError: (
+      error: CFErrorResponse,
+      failedOrderId: string
+    ) => {
+      console.log(
+        "Cashfree UPI error:",
+        error,
+        failedOrderId
+      );
+
+      Alert.alert(
+        "UPI Payment Failed",
+        error?.getMessage?.() ||
+          "UPI payment could not be completed."
+      );
+    },
+  });
+
+  return () => {
+    CFPaymentGatewayService.removeCallback();
+  };
+}, [truck_id, load]);
 
   // =========================
   // START CASHFREE PAYMENT
@@ -70,6 +155,8 @@ export default function SubscribeScreen() {
 
       setSubId(order.subscription_id);
       setOrderId(order.order_id);
+      subIdRef.current = order.subscription_id;
+orderIdRef.current = order.order_id;
 
       // =========================
       // MOCK MODE
@@ -96,15 +183,31 @@ export default function SubscribeScreen() {
       // =========================
 
       if (!order.payment_session_id) {
-        throw new Error("Cashfree payment session not received");
-      }
+  throw new Error("Cashfree payment session not received");
+}
 
-      setPayHtml(
-        buildCashfreeHtml({
-          paymentSessionId: order.payment_session_id,
-          environment: order.cashfree_env || "production",
-        })
-      );
+const environment =
+  order.cashfree_env?.toLowerCase() === "sandbox"
+    ? CFEnvironment.SANDBOX
+    : CFEnvironment.PRODUCTION;
+
+const session = new CFSession(
+  order.payment_session_id,
+  order.order_id,
+  environment
+);
+
+const theme = new CFThemeBuilder()
+  .setNavigationBarBackgroundColor("#ffffff")
+  .setNavigationBarTextColor("#000000")
+  .build();
+
+const payment = new CFUPIIntentCheckoutPayment(
+  session,
+  theme
+);
+
+CFPaymentGatewayService.doUPIPayment(payment);
     } catch (e: any) {
       Alert.alert(
         "Payment Error",

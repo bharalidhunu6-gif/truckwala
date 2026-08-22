@@ -51,7 +51,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
           const data = JSON.parse(evt.data) as Notif;
           if (data.type === "ready") return;
           setLast(data);
-          play("new");
+          play();
         } catch { /* ignore */ }
       };
     };
