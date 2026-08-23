@@ -142,7 +142,7 @@ const subIdRef = useRef<string | null>(null);
   // START CASHFREE PAYMENT
   // =========================
 
-  const startPay = async () => {
+  const startPay = async (method: "upi" | "qr") => {
     if (!truck_id) {
       Alert.alert("Error", "Truck ID missing");
       return;
@@ -185,6 +185,25 @@ orderIdRef.current = order.order_id;
       if (!order.payment_session_id) {
   throw new Error("Cashfree payment session not received");
 }
+
+// =========================
+// QR PAYMENT
+// =========================
+
+if (method === "qr") {
+  setPayHtml(
+    buildCashfreeHtml({
+      paymentSessionId: order.payment_session_id,
+      environment: order.cashfree_env || "production",
+    })
+  );
+
+  return;
+}
+
+// =========================
+// DIRECT UPI APP PAYMENT
+// =========================
 
 const environment =
   order.cashfree_env?.toLowerCase() === "sandbox"
@@ -594,19 +613,35 @@ const verifySubscription = async () => {
           );
         })}
 
-        <Button
-          testID="sub-pay-btn"
-          label={
-            active
-              ? `Renew (₹${activeTier?.amount_inr}/month)`
-              : `Subscribe now — ₹${activeTier?.amount_inr}/month`
-          }
-          onPress={startPay}
-          loading={busy}
-          leftIcon="card-outline"
-          fullWidth
-          style={{ marginTop: spacing.md }}
-        />
+        <View style={{ gap: 12, marginTop: spacing.md }}>
+
+  <Button
+    testID="sub-upi-btn"
+    label={
+      active
+        ? `Renew via UPI App — ₹${activeTier?.amount_inr}`
+        : `Pay via UPI App — ₹${activeTier?.amount_inr}`
+    }
+    onPress={() => startPay("upi")}
+    loading={busy}
+    leftIcon="phone-portrait-outline"
+    fullWidth
+  />
+
+  <Button
+    testID="sub-qr-btn"
+    label={
+      active
+        ? `Renew via QR Code — ₹${activeTier?.amount_inr}`
+        : `Pay via QR Code — ₹${activeTier?.amount_inr}`
+    }
+    onPress={() => startPay("qr")}
+    loading={busy}
+    leftIcon="qr-code-outline"
+    fullWidth
+  />
+
+</View>s
 
         <Text
           style={[
