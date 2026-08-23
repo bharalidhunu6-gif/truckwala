@@ -641,7 +641,7 @@ const verifySubscription = async () => {
     fullWidth
   />
 
-</View>s
+</View>
 
         <Text
           style={[
@@ -693,6 +693,19 @@ const verifySubscription = async () => {
             originWhitelist={["*"]}
             source={{ html: payHtml }}
             onMessage={onWebMessage}
+            onNavigationStateChange={(nav) => {
+  const url = nav.url || "";
+
+  console.log("Cashfree WebView URL:", url);
+
+  if (
+    url.includes(
+      "truckwala.tech/?payment=subscription_success"
+    )
+  ) {
+    verifySubscription();
+  }
+}}
             javaScriptEnabled
             domStorageEnabled
             setSupportMultipleWindows={false}
@@ -883,10 +896,6 @@ async function startCashfree() {
      * React Native will now ask the
      * backend to verify the payment.
      */
-
-    sendMessage({
-      type: "payment_finished"
-    });
 
   } catch (error) {
 
