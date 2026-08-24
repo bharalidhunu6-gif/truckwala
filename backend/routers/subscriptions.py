@@ -31,6 +31,8 @@ from models import SubscriptionOrderIn, SubscriptionVerifyIn
 router = APIRouter(tags=["subscriptions"])
 log = logging.getLogger(__name__)
 
+FREE_TRIAL_DAYS = 14
+FREE_TRIAL_TRUCKS_PER_ACCOUNT = 1
 
 # =========================
 # CASHFREE CONFIG
@@ -110,16 +112,24 @@ async def truck_status(
 
     st = await truck_subscription_status(truck_id)
 
+    trial_used = await db.subscriptions.find_one({
+    "driver_id": user["id"],
+    "subscription_type": "free_trial",
+})
+
+    trial_available = trial_used is None
+
     return {
-        "truck_id": truck_id,
-        "reg_number": t.get("reg_number"),
-        "active": st["active"],
-        "expires_at": st["expires_at"],
-        "tier": tier_for(
-            t.get("load_capacity_kg") or 0
-        ),
-        "latest_subscription": st["sub"],
-    }
+    "truck_id": truck_id,
+    "reg_number": t.get("reg_number"),
+    "active": st["active"],
+    "expires_at": st["expires_at"],
+    "tier": tier_for(
+        t.get("load_capacity_kg") or 0
+    ),
+    "latest_subscription": st["sub"],
+    "trial_available": trial_available,
+}
 
 
 # =========================
@@ -151,12 +161,82 @@ async def create_order(
     tier = tier_for(
         t.get("load_capacity_kg") or 0
     )
-
     amount = float(tier["amount_inr"])
 
+    # ============================================================
+    # 14-DAY FREE TRIAL
+    # One free-trial truck per account only
+    # ============================================================
+
+    trial_used = await db.subscriptions.find_one({
+        "driver_id": user["id"],
+        "subscription_type": "free_trial",
+    })
+
+    can_start_trial = trial_used is None
+    # ============================================================
+    # START 14-DAY FREE TRIAL
+    # ============================================================
+
+    if can_start_trial:
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(days=FREE_TRIAL_DAYS)
+
+        trial_sub_id = str(uuid.uuid4())
+        trial_order_id = f"trial_{uuid.uuid4().hex[:12]}"
+
+        trial_doc = {
+            "id": trial_sub_id,
+            "driver_id": user["id"],
+            "driver_name": user.get("name"),
+            "truck_id": body.truck_id,
+            "reg_number": t.get("reg_number"),
+            "tier_id": tier["id"],
+            "amount_inr": 0,
+
+            "cashfree_order_id": trial_order_id,
+            "cashfree_payment_id": None,
+
+            "payment_gateway": None,
+            "subscription_type": "free_trial",
+
+            "status": "active",
+            "created_at": now.isoformat(),
+            "activated_at": now.isoformat(),
+            "expires_at": expires_at,
+        }
+
+        await db.subscriptions.insert_one(trial_doc)
+
+        trial_doc.pop("_id", None)
+
+        return {
+            "subscription_id": trial_sub_id,
+            "order_id": trial_order_id,
+            "payment_session_id": None,
+
+            "amount_inr": 0,
+            "currency": "INR",
+
+            "tier": tier,
+
+            "truck": {
+                "id": t["id"],
+                "reg_number": t.get("reg_number"),
+                "truck_type": t.get("truck_type"),
+            },
+
+            "customer_name": user.get("name"),
+            "customer_email": user.get("email"),
+            "customer_phone": user.get("phone"),
+
+            "mock_mode": False,
+            "trial_mode": True,
+            "trial_days": FREE_TRIAL_DAYS,
+            "expires_at": expires_at.isoformat(),
+        }
     # Unique subscription record
     sub_id = str(uuid.uuid4())
-
     # =========================
     # MOCK PAYMENT
     # =========================

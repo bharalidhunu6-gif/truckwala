@@ -152,6 +152,21 @@ const subIdRef = useRef<string | null>(null);
 
     try {
       const order = await api.subOrder(truck_id);
+      if (order.trial_mode) {
+  Alert.alert(
+    "🎉 Free Trial Activated",
+    `Your 14-day free trial is active until ${
+      new Date(order.expires_at).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    }.`
+  );
+
+  await load();
+  return;
+}
 
       setSubId(order.subscription_id);
       setOrderId(order.order_id);
@@ -355,6 +370,7 @@ const verifySubscription = async () => {
 
   const activeTier = status?.tier || tiers?.[0] || null;
   const active = !!status?.active;
+  const trialAvailable = !!status?.trial_available;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceAlt }}>
@@ -614,6 +630,16 @@ const verifySubscription = async () => {
         })}
 
         <View style={{ gap: 12, marginTop: spacing.md }}>
+          {trialAvailable && !active && (
+  <Button
+    testID="sub-trial-btn"
+    label="🎁 Start 14-Day Free Trial"
+    onPress={() => startPay("upi")}
+    loading={busy}
+    leftIcon="gift-outline"
+    fullWidth
+  />
+)}
 
   <Button
     testID="sub-upi-btn"
