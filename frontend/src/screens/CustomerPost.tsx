@@ -39,30 +39,35 @@ export default function CustomerPost() {
   const truckPicker = usePicker();
 
   const pickPhoto = useCallback(async () => {
-    if (photos.length >= 5) return Alert.alert("Limit reached", "You can attach up to 5 photos.");
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (perm.status !== "granted") {
-      Alert.alert(
-        "Permission needed",
-        "Photo access is required. Enable it in Settings.",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Open Settings", onPress: () => { if (Platform.OS !== "web") { require("expo-linking").openSettings?.(); } } },
-        ]
-      );
-      return;
-    }
+  if (photos.length >= 5) {
+    return Alert.alert(
+      "Limit reached",
+      "You can attach up to 5 photos."
+    );
+  }
+
+  try {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: false,
       quality: 0.6,
       base64: true,
     });
+
     if (!res.canceled && res.assets?.[0]?.base64) {
-      const uri = `data:image/jpeg;base64,${res.assets[0].base64}`;
-      setPhotos((p) => [...p, uri]);
+      const mimeType = res.assets[0].mimeType || "image/jpeg";
+      const uri = `data:${mimeType};base64,${res.assets[0].base64}`;
+
+      setPhotos((prev) => [...prev, uri]);
     }
-  }, [photos.length]);
+  } catch (error) {
+    console.log("Photo picker error:", error);
+    Alert.alert(
+      "Photo Error",
+      "Could not select the photo. Please try again."
+    );
+  }
+}, [photos.length]);
 
   useEffect(() => { api.catalog().then(setCatalog).catch(() => {}); }, []);
 

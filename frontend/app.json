@@ -23,29 +23,22 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
-      },
-      "edgeToEdgeEnabled": true,
-      "package": "com.emergent.freightmatch.fdoans",
-      "permissions": [
-        "CAMERA",
-        "READ_MEDIA_IMAGES",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
-      ]
-    },
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/images/adaptive-icon.png",
+    "backgroundColor": "#000000"
+  },
+  "edgeToEdgeEnabled": true,
+  "package": "com.emergent.freightmatch.fdoans",
+  "versionCode": 9,
+  "permissions": [
+    "CAMERA",
+    "ACCESS_FINE_LOCATION",
+    "ACCESS_COARSE_LOCATION",
+    "ACCESS_BACKGROUND_LOCATION",
+    "RECORD_AUDIO",
+    "MODIFY_AUDIO_SETTINGS"
+  ]
+},
     "web": {
       "bundler": "metro",
       "output": "single",
@@ -64,13 +57,14 @@
       ],
       "expo-font",
       [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Share your live location while your trip is active so customers can track delivery.",
-          "isIosBackgroundLocationEnabled": true,
-          "isAndroidBackgroundLocationEnabled": true
-        }
-      ],
+  "expo-location",
+  {
+    "locationAlwaysAndWhenInUsePermission": "Share your live location while your trip is active so customers can track delivery.",
+    "isIosBackgroundLocationEnabled": true,
+    "isAndroidBackgroundLocationEnabled": true,
+    "isAndroidForegroundServiceEnabled": true
+  }
+],
       "expo-audio"
     ],
     "experiments": {

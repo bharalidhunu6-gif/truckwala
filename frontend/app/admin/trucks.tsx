@@ -215,9 +215,9 @@ export default function AdminTrucks() {
                         <Text style={{ ...type.body, fontWeight: "700" }}>
                           ₹{t.subscription.amount_inr}/mo · {t.subscription.status.toUpperCase()}
                         </Text>
-                        {t.subscription.razorpay_payment_id && (
+                        {t.subscription.cashfree_payment_id && (
                           <Text style={{ ...type.small, color: colors.onSurfaceMuted }} numberOfLines={1}>
-                            TXN: {t.subscription.razorpay_payment_id}
+                            TXN: {t.subscription.cashfree_payment_id}
                           </Text>
                         )}
                         {t.subscription_expires_at && (

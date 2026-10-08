@@ -13,12 +13,6 @@ import { colors, spacing, type, radius, shadow } from "@/src/theme";
 import { Button, EmptyState, Card, Tag, SkeletonCard } from "@/src/ui";
 import { useNotificationSound } from "@/src/sound";
 import { useNotifications } from "@/src/notifications";
-import {
-  startOnlineMode,
-  stopOnlineMode,
-  isOnlineModeActive,
-  isBackgroundLocationSupported,
-} from "@/src/backgroundLocation";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1755728531140-88e0b2a72d75";
 
@@ -41,52 +35,74 @@ export default function Home() {
   const lastIdsRef = useRef<Set<string>>(new Set());
   const notif = useNotifications();
 
-  const requestGps = useCallback(async () => {
-    setGpsRequesting(true);
+  const requestGps = useCallback(async (): Promise<boolean> => {
+  setGpsRequesting(true);
+
+  try {
+    const perm = await Location.requestForegroundPermissionsAsync();
+
+    if (perm.status !== "granted") {
+      Alert.alert(
+        "Permission needed",
+        "Enable location to see nearby loads within 100 km."
+      );
+      return false;
+    }
+
+    const loc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    setDriverGps({
+      lat: loc.coords.latitude,
+      lng: loc.coords.longitude,
+    });
+
     try {
-      const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status !== "granted") { Alert.alert("Permission needed", "Enable location to see nearby loads within 100 km."); return; }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setDriverGps({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-      // Also persist to the server so it can push new_load pings to us.
-      try {
-        const token = await getToken();
-        await fetch(`${process.env.EXPO_PUBLIC_BACKEND_URL}/api/users/me/location`, {
+      const token = await getToken();
+
+      await fetch(
+        `${process.env.EXPO_PUBLIC_BACKEND_URL}/api/users/me/location`,
+        {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ lat: loc.coords.latitude, lng: loc.coords.longitude }),
-        });
-      } catch {}
-    } catch (e: any) { Alert.alert("Error", e.message); }
-    finally { setGpsRequesting(false); }
-  }, []);
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            lat: loc.coords.latitude,
+            lng: loc.coords.longitude,
+          }),
+        }
+      );
+    } catch {}
+
+    return true;
+  } catch (e: any) {
+    Alert.alert("Error", e.message);
+    return false;
+  } finally {
+    setGpsRequesting(false);
+  }
+}, []);
 
   const toggleOnline = useCallback(async () => {
-    if (onlineMode) {
-      await stopOnlineMode();
-      setOnlineMode(false);
-      Alert.alert("Went offline", "Auto-location paused.");
-      return;
-    }
-    if (!isBackgroundLocationSupported()) {
-      Alert.alert(
-        "Native build required",
-        "Automatic background location needs an iOS / Android build. You can still tap 'Enable' for a one-time update."
-      );
-      return;
-    }
-    const token = await getToken();
-    const res = await startOnlineMode(token || "");
-    if (res.ok) {
-      setOnlineMode(true);
-      Alert.alert("You're online", "Your location will refresh in the background so nearby loads reach you first.");
-    } else if (res.reason === "background-denied") {
-      Alert.alert("Background permission required", "Grant 'Allow all the time' in Settings.");
-    }
-  }, [onlineMode]);
+  if (onlineMode) {
+    setOnlineMode(false);
+    Alert.alert("Went offline", "Location sharing paused.");
+    return;
+  }
 
-  // Sync online toggle with actual task state on mount.
-  useEffect(() => { isOnlineModeActive().then(setOnlineMode); }, []);
+  const ok = await requestGps();
+if (!ok) return;
+
+setOnlineMode(true);
+
+  Alert.alert(
+    "You're online",
+    "Your current location has been shared. Nearby loads will use this location."
+  );
+}, [onlineMode, requestGps]);
 
   // A push notification for our role should trigger a list refresh + chirp.
   useEffect(() => {
@@ -219,7 +235,9 @@ export default function Home() {
             <View style={styles.onlineDot} />
             <View style={{ flex: 1 }}>
               <Text style={{ ...type.body, fontWeight: "700" }}>{onlineMode ? "You're online" : "Go online"}</Text>
-              <Text style={type.small}>{onlineMode ? "Auto-sharing GPS. Getting priority on nearby loads." : "Background GPS off. Turn on to auto-refresh nearby loads."}</Text>
+              <Text style={type.small}>{onlineMode
+  ? "Current location shared. Use refresh to update nearby loads."
+  : "Share your current location to find nearby loads."}</Text>
             </View>
             <Button testID="online-toggle" label={onlineMode ? "Go offline" : "Go online"} variant={onlineMode ? "secondary" : "primary"} onPress={toggleOnline} size="md" />
           </View>
@@ -230,7 +248,9 @@ export default function Home() {
             <Ionicons name="navigate-circle-outline" size={20} color={colors.brand} />
             <View style={{ flex: 1 }}>
               <Text style={{ ...type.body, fontWeight: "700" }}>Share location once</Text>
-              <Text style={type.small}>Or "Go online" above for automatic refresh.</Text>
+              <Text style={type.small}>
+  Share your current location to find nearby loads.
+</Text>
             </View>
             <Button testID="enable-gps-btn" label={gpsRequesting ? "..." : "Enable"} onPress={requestGps} size="md" />
           </View>

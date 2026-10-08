@@ -80,11 +80,11 @@ export default function AdminSubscriptions() {
                   <View style={styles.txnRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={type.label}>ORDER ID</Text>
-                      <Text style={{ ...type.small, color: colors.onSurface }} numberOfLines={1}>{s.razorpay_order_id || "—"}</Text>
+                      <Text style={{ ...type.small, color: colors.onSurface }} numberOfLines={1}>{s.cashfree_order_id || "—"}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={type.label}>PAYMENT ID</Text>
-                      <Text style={{ ...type.small, color: colors.onSurface }} numberOfLines={1}>{s.razorpay_payment_id || "—"}</Text>
+                      <Text style={{ ...type.small, color: colors.onSurface }} numberOfLines={1}>{s.cashfree_payment_id || "—"}</Text>
                     </View>
                   </View>
                   <View style={styles.txnRow}>

@@ -62,17 +62,29 @@ export default function DriverTrucks() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const pick = async (setter: (s: string) => void) => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return Alert.alert("Permission needed", "Please allow photo access to attach vehicle images.");
+  try {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.6,
       base64: true,
     });
-    if (!res.canceled && res.assets[0]?.base64) {
-      setter(`data:${res.assets[0].mimeType || "image/jpeg"};base64,${res.assets[0].base64}`);
+
+    if (!res.canceled && res.assets?.[0]?.base64) {
+      const mimeType = res.assets[0].mimeType || "image/jpeg";
+
+      setter(
+        `data:${mimeType};base64,${res.assets[0].base64}`
+      );
     }
-  };
+  } catch (error) {
+    console.log("Photo picker error:", error);
+
+    Alert.alert(
+      "Photo Error",
+      "Could not select the photo. Please try again."
+    );
+  }
+};
 
   const submit = async () => {
     setErr("");

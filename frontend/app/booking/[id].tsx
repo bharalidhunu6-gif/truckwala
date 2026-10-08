@@ -126,9 +126,9 @@ export default function BookingDetail() {
       if (order.mock_mode) {
         await api.verifyPayment({
           booking_id: id,
-          razorpay_order_id: order.order_id,
-          razorpay_payment_id: `pay_mock_${Date.now()}`,
-          razorpay_signature: "mock",
+          cashfree_order_id: order.order_id,
+          cashfree_payment_id: `pay_mock_${Date.now()}`,
+          cashfree_signature: "mock",
         });
         Alert.alert("Payment successful", "Booking paid (mock mode).");
         load();
@@ -145,9 +145,9 @@ export default function BookingDetail() {
       if (data.type === "success") {
         await api.verifyPayment({
           booking_id: id,
-          razorpay_order_id: data.order_id,
-          razorpay_payment_id: data.payment_id,
-          razorpay_signature: data.signature,
+          cashfree_order_id: data.order_id,
+          cashfree_payment_id: data.payment_id,
+          cashfree_signature: data.signature,
         });
         setPayHtml(null);
         load();
@@ -458,7 +458,7 @@ export default function BookingDetail() {
             </>
           )}
           {!isDriver && b.status !== "delivered" && b.status !== "cancelled" && b.payment_status !== "paid" && b.payment_method !== "cod" && (
-            <Button testID="pay-btn" label={`Pay ₹${Math.round(b.price_inr).toLocaleString("en-IN")} via Razorpay`} onPress={startPay} loading={processing} leftIcon="card-outline" fullWidth />
+            <Button testID="pay-btn" label={`Pay ₹${Math.round(b.price_inr).toLocaleString("en-IN")} via Cashfree`} onPress={startPay} loading={processing} leftIcon="card-outline" fullWidth />
           )}
           {b.payment_method === "cod" && b.status !== "delivered" && (
             <View style={styles.codBanner}>
@@ -557,7 +557,7 @@ function RoutePoint({ city, addr, label, color }: any) {
 
 function buildRzpHtml(order: any) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><script src="https://checkout.razorpay.com/v1/checkout.js"></script></head><body style="margin:0;padding:0;background:#f7f8fa;color:#0b0f14;font-family:-apple-system,sans-serif"><div style="padding:20px">Opening Razorpay...</div><script>
-    const rzp = new Razorpay({
+    const rzp = new cashfree({
       key: ${JSON.stringify(order.key_id)},
       amount: ${JSON.stringify(order.amount_paise)},
       currency: "INR",
@@ -566,7 +566,7 @@ function buildRzpHtml(order: any) {
       description: "Booking Payment",
       prefill: { name: ${JSON.stringify(order.customer_name)}, email: ${JSON.stringify(order.customer_email)}, contact: ${JSON.stringify(order.customer_phone)} },
       theme: { color: "#0A5AF0" },
-      handler: function (resp) { window.ReactNativeWebView.postMessage(JSON.stringify({ type: "success", order_id: resp.razorpay_order_id, payment_id: resp.razorpay_payment_id, signature: resp.razorpay_signature })); },
+      handler: function (resp) { window.ReactNativeWebView.postMessage(JSON.stringify({ type: "success", order_id: resp.cashfree_order_id, payment_id: resp.cashfree_payment_id, signature: resp.razorpay_signature })); },
       modal: { ondismiss: function () { window.ReactNativeWebView.postMessage(JSON.stringify({ type: "cancelled" })); } }
     });
     rzp.on('payment.failed', function (resp) { window.ReactNativeWebView.postMessage(JSON.stringify({ type: "error", error: resp.error })); });
