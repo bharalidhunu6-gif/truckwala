@@ -29,7 +29,7 @@
   },
   "edgeToEdgeEnabled": true,
   "package": "com.emergent.freightmatch.fdoans",
-  "versionCode": 9,
+  "versionCode": 10,
   "permissions": [
     "CAMERA",
     "ACCESS_FINE_LOCATION",
@@ -65,7 +65,12 @@
     "isAndroidForegroundServiceEnabled": true
   }
 ],
-      "expo-audio"
+      [
+  "expo-audio",
+  {
+    "enableBackgroundPlayback": false
+  }
+]
     ],
     "experiments": {
       "typedRoutes": true
